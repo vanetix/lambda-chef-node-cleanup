@@ -11,6 +11,8 @@ The Lambda function then communicates with the Chef Server using a request hashe
 # WARNING: PyChef is Modified Outside of the Official Release
 I'm using [PyChef](https://github.com/coderanger/pychef) which is a semi-maintained module.  The version included is 0.2.3 and does not support Amazon Linux.  To fix this, I had to modify `rsa.py` in PyChef and change `libcrypto.so` to `libcrypto.so.10`.
 
+An open Pull Request will solve this better:  https://github.com/coderanger/pychef/pull/49
+
 # Deploying the Lambda Function
 I'm using [Apex](https://github.com/apex/apex) to deploy personally, but as long as you zip everything up in the `node_cleanup` directory you should be good to go!
 
