@@ -9,7 +9,7 @@ When an instance terminates, CloudWatch events will pass a JSON object containin
 The Lambda function then communicates with the Chef Server using a request hashed with a valid private key of a valid Chef Server user with appropriate permissions.  The Lambda expects an AWS KMS encrypted version of the private key which it will decrypt on the fly to sign all requests to the Chef Server.  The Lambda then makes a request to find a matching node in the Chef Server and finally a request to delete that node.
 
 # WARNING: PyChef is Modified Outside of the Official Release
-I'm [PyChef](https://github.com/coderanger/pychef) which is a semi-maintained module.  The version included is 0.2.3 and does not support Amazon Linux.  To fix this, I had to modify `rsa.py` in PyChef and change `libcrypto.so` to `libcrypto.so.10`.
+I'm using [PyChef](https://github.com/coderanger/pychef) which is a semi-maintained module.  The version included is 0.2.3 and does not support Amazon Linux.  To fix this, I had to modify `rsa.py` in PyChef and change `libcrypto.so` to `libcrypto.so.10`.
 
 # Deploying the Lambda Function
 I'm using [Apex](https://github.com/apex/apex) to deploy personally, but as long as you zip everything up in the `node_cleanup` directory you should be good to go!
