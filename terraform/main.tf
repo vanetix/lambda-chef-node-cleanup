@@ -10,13 +10,6 @@ resource "template_file" "project_json" {
     }
 }
 
-# dummy resource to copy the json file
-resource "null_resource" "copy_template" {
-  provisioner "local-exec" {
-    command = "echo '${template_file.project_json.rendered}' > project.json"
-  }
-}
-
 resource "aws_iam_role" "lambda_role" {
     name = "chef_node_cleanup_lambda"
     assume_role_policy = <<EOF
@@ -34,9 +27,6 @@ resource "aws_iam_role" "lambda_role" {
   ]
 }
 EOF
-  provisioner "local-exec" {
-    command = "apex deploy"
-  }
 }
 
 resource "aws_iam_role_policy" "lambda_policy" {
@@ -79,4 +69,18 @@ resource "aws_cloudwatch_event_target" "lambda" {
   rule = "${aws_cloudwatch_event_rule.instance_termination.name}"
   target_id = "chef_node_cleanup"
   arn = "arn:aws:lambda:${var.region}:${var.account_number}:function:chef_node_cleanup"
+}
+
+# dummy resource to copy the json file
+resource "null_resource" "copy_template" {
+  provisioner "local-exec" {
+    command = "echo '${template_file.project_json.rendered}' > project.json"
+  }
+}
+
+# dummy resource to deploy lambda function using apex
+resource "null_resource" "apex_deploy" {
+  provisioner "local-exec" {
+    command = "apex deploy"
+  }
 }
