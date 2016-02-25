@@ -13,13 +13,11 @@ I'm using [PyChef](https://github.com/coderanger/pychef) which is a semi-maintai
 
 An open Pull Request will solve this better:  https://github.com/coderanger/pychef/pull/49
 
-# Deploying the Lambda Function
-I'm using [Apex](https://github.com/apex/apex) to deploy personally, but as long as you zip everything up in the `node_cleanup` directory you should be good to go!
-
-# Setup
-## IAM Role
-The Lambda function requires a role with the standard Lambda policy.
-
+# Prerequisites
+## Terraform
+Install [Terraform](https://www.terraform.io)
+#@ Deploying the Lambda Function
+I'm using [Apex](https://github.com/apex/apex) to deploy personally, but as long as you zip everything up in the `node_cleanup` directory you should be good to go.  You'll always want to delete the `local-exec` provisioner for `apex deploy` in the `terraform/main.tf` file if you aren't using Apex.
 ## KMS
 Chef Server uses public key encryption to authenticate API requests.  This requires the client to hash the requests using a valid private key.  With this example, we'll use KMS to store an encrypted copy of our private key and then decrypt it on the fly with the Lambda function.
 
@@ -29,9 +27,6 @@ Chef Server uses public key encryption to authenticate API requests.  This requi
 
 ## Lambda Function
 Modify the `CHEF_SERVER_URL` and `USERNAME` variables as appropriate.
-
-## CloudWatch Event
-Create a new Event in CloudWatch that watches for Terminated EC2 instances (any instance, specific state).  The target should be your Lambda function with an input of "Matched event".
 
 ## Chef Server Permissions
 The user making the request needs the appropriate permissions in Chef Server to query and delete nodes.  As described above, you'll need access to the private key for this user.
