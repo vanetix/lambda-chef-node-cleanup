@@ -4,5 +4,5 @@
   "memory": 128,
   "timeout": 5,
   "runtime": "python",
-  "role": "arn:aws:iam::575330773084:role/lambda_chef_node_cleanup"
+  "role": "${role_arn}"
 }
