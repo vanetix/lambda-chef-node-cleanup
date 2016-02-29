@@ -12,29 +12,7 @@ provider "aws" {
   region = "${var.region}"
 }
 
-resource "aws_iam_role" "lambda_role" {
-    name = "chef_node_cleanup_lambda"
-    assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-output "lambda_role_arn" {
-  value = "${aws_iam_role.lambda_role.name}"
-}
-
+# Lambda Role with Required Policy
 resource "aws_iam_role_policy" "lambda_policy" {
     name = "chef_node_cleanup_lambda"
     role = "${aws_iam_role.lambda_role.id}"
@@ -56,6 +34,29 @@ resource "aws_iam_role_policy" "lambda_policy" {
 EOF
 }
 
+resource "aws_iam_role" "lambda_role" {
+    name = "chef_node_cleanup_lambda"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+output "lambda_role_arn" {
+  value = "${aws_iam_role.lambda_role.name}"
+}
+
+# Lambda Function
 resource "aws_lambda_function" "lambda_function" {
     filename = "lambda_function_payload.zip"
     function_name = "chef_node_cleanup"
@@ -67,6 +68,7 @@ resource "aws_lambda_function" "lambda_function" {
     timeout = 5
 }
 
+# CloudWatch Event Rule and Event Target
 resource "aws_cloudwatch_event_rule" "instance_termination" {
   depends_on = ["aws_iam_role.lambda_role"] # we need the Lambda arn to exist
   name = "Chef_Node_Cleanup_Lambda"
