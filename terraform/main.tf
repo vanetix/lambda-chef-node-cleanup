@@ -67,7 +67,7 @@ resource "aws_lambda_function" "lambda_function" {
     runtime = "python2.7"
     timeout = 5
     # this will be released soon
-    # https://github.com/hashicorp/terraform/pull/3825
+    # https://github.com/hashicorp/terraform/pull/5239
     # source_code_hash = "${base64encode(sha256(file("lambda_function_payload.zip")))}"
 }
 
