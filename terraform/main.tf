@@ -89,9 +89,10 @@ resource "aws_cloudwatch_event_target" "lambda" {
   arn = "arn:aws:lambda:${var.region}:${var.account_number}:function:chef_node_cleanup"
 }
 
-#resource "aws_lambda_permission" "allow_cloudwatch" {
-#    statement_id = "AllowExecutionFromCloudWatch"
-#    action = "lambda:InvokeFunction"
-#    function_name = "${aws_lambda_function.lambda_function.arn}"
-#    principal = "events.amazonaws.com"
-#}
+resource "aws_lambda_permission" "allow_cloudwatch" {
+    statement_id = "AllowExecutionFromCloudWatch"
+    action = "lambda:InvokeFunction"
+    function_name = "${aws_lambda_function.lambda_function.arn}"
+    principal = "events.amazonaws.com"
+    source_arn = "${aws_cloudwatch_event_rule.instance_termination.arn}"
+}
