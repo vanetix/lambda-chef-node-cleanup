@@ -66,6 +66,17 @@ resource "aws_lambda_function" "lambda_function" {
     memory_size = 128
     runtime = "python2.7"
     timeout = 5
+    # this will be released soon
+    # https://github.com/hashicorp/terraform/pull/3825
+    # source_code_hash = "${base64encode(sha256(file("lambda_function_payload.zip")))}"
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch" {
+    statement_id = "AllowExecutionFromCloudWatch"
+    action = "lambda:InvokeFunction"
+    function_name = "${aws_lambda_function.lambda_function.arn}"
+    principal = "events.amazonaws.com"
+    source_arn = "${aws_cloudwatch_event_rule.instance_termination.arn}"
 }
 
 # CloudWatch Event Rule and Event Target
@@ -88,13 +99,5 @@ resource "aws_cloudwatch_event_target" "lambda" {
   depends_on = ["aws_iam_role.lambda_role"] # we need the Lambda arn to exist
   rule = "${aws_cloudwatch_event_rule.instance_termination.name}"
   target_id = "chef_node_cleanup"
-  arn = "arn:aws:lambda:${var.region}:${var.account_number}:function:chef_node_cleanup"
-}
-
-resource "aws_lambda_permission" "allow_cloudwatch" {
-    statement_id = "AllowExecutionFromCloudWatch"
-    action = "lambda:InvokeFunction"
-    function_name = "${aws_lambda_function.lambda_function.arn}"
-    principal = "events.amazonaws.com"
-    source_arn = "${aws_cloudwatch_event_rule.instance_termination.arn}"
+  arn = "${aws_lambda_function.lambda_function.arn}"
 }
