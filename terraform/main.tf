@@ -12,14 +12,6 @@ provider "aws" {
   region = "${var.region}"
 }
 
-resource "template_file" "project_json" {
-    depends_on = ["aws_iam_role.lambda_role"]
-    template = "${file("${path.module}/project_json.tpl")}"
-    vars {
-        role_arn = "${aws_iam_role.lambda_role.arn}"
-    }
-}
-
 resource "aws_iam_role" "lambda_role" {
     name = "chef_node_cleanup_lambda"
     assume_role_policy = <<EOF
@@ -64,6 +56,17 @@ resource "aws_iam_role_policy" "lambda_policy" {
 EOF
 }
 
+resource "aws_lambda_function" "lambda_function" {
+    filename = "lambda_function_payload.zip"
+    function_name = "chef_node_cleanup"
+    role = "${aws_iam_role.lambda_role.arn}"
+    handler = "main.handle"
+    description = "Automatically delete nodes from Chef Server on termination"
+    memory_size = 128
+    runtime = "python2.7"
+    timeout = 5
+}
+
 resource "aws_cloudwatch_event_rule" "instance_termination" {
   depends_on = ["aws_iam_role.lambda_role"] # we need the Lambda arn to exist
   name = "Chef_Node_Cleanup_Lambda"
@@ -79,9 +82,6 @@ resource "aws_cloudwatch_event_rule" "instance_termination" {
 PATTERN
 }
 
-# TODO
-# Bug in here somewhere, the Event doesn't fully create as the Lambda function
-# never gets the Event Source added to it.
 resource "aws_cloudwatch_event_target" "lambda" {
   depends_on = ["aws_iam_role.lambda_role"] # we need the Lambda arn to exist
   rule = "${aws_cloudwatch_event_rule.instance_termination.name}"
@@ -89,24 +89,9 @@ resource "aws_cloudwatch_event_target" "lambda" {
   arn = "arn:aws:lambda:${var.region}:${var.account_number}:function:chef_node_cleanup"
 }
 
-# dummy resource to copy the json file
-resource "null_resource" "copy_template" {
-  provisioner "local-exec" {
-    command = "echo '${template_file.project_json.rendered}' > lambda/project.json"
-  }
-}
-
-# dummy resource to wait while things get consistent in aws
-resource "null_resource" "sleep" {
-    provisioner "local-exec" {
-      command = "sleep 10"
-    }
-}
-
-# dummy resource to deploy lambda function using apex
-resource "null_resource" "apex_deploy" {
-  depends_on = ["null_resource.sleep"]
-  provisioner "local-exec" {
-    command = "apex deploy -C lambda/"
-  }
-}
+#resource "aws_lambda_permission" "allow_cloudwatch" {
+#    statement_id = "AllowExecutionFromCloudWatch"
+#    action = "lambda:InvokeFunction"
+#    function_name = "${aws_lambda_function.lambda_function.arn}"
+#    principal = "events.amazonaws.com"
+#}
