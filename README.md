@@ -13,7 +13,7 @@ The Lambda function then communicates with the Chef Server using a request hashe
 ## WARNING: PyChef is Modified Outside of the Official Release
 The version [PyChef](https://github.com/coderanger/pychef) included is 0.2.3 and does not support Amazon Linux.  To fix this, `rsa.py` in PyChef inside this repository is modified to allow it function on Amazon Linux as this is the underlying OS for Lambda functions.  `rsa.py` is modified to use the correct libcrypto library: `libcrypto.so` to `libcrypto.so.10`.
 
-An open Pull Request will solve this better:  https://github.com/coderanger/pychef/pull/49
+An open Pull Request will solve this better:  https://github.com/coderanger/pychef/pull/49.  You are encouraged to create your own client.
 
 # Prerequisites
 ## Terraform
