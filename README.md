@@ -10,10 +10,10 @@ When an instance terminates, CloudWatch events will pass a JSON object containin
 
 The Lambda function then communicates with the Chef Server using a request hashed with a valid private key of a valid Chef Server user with appropriate permissions.  The Lambda expects an AWS KMS encrypted version of the private key which it will decrypt on the fly to sign all requests to the Chef Server.  The Lambda then makes a request to find a matching node in the Chef Server and finally a request to delete that node.
 
-## WARNING: PyChef is Modified Outside of the Official Release
-The version [PyChef](https://github.com/coderanger/pychef) included is 0.2.3 and does not support Amazon Linux.  To fix this, `rsa.py` in PyChef inside this repository is modified to allow it function on Amazon Linux as this is the underlying OS for Lambda functions.  `rsa.py` is modified to use the correct libcrypto library: `libcrypto.so` to `libcrypto.so.10`.
+## WARNING:  Forked version of PyChef in use
+Currently, the version of [PyChef](https://github.com/coderanger/pychef) found in pip is 0.2.3 and does not support Amazon Linux which is the underlying OS that Lambda runs on.  The version of PyChef included in this repository is a [fork](https://github.com/irlrobot/pychef) modified to provide Amazon Linux support.
 
-An open Pull Request will solve this better:  https://github.com/coderanger/pychef/pull/49.  You are encouraged to create your own client.
+An open Pull Request will solve this better for the official project:  https://github.com/coderanger/pychef/pull/49.  You are encouraged to create your own client for use in production until the official project provides support.
 
 # Prerequisites
 ## Terraform
@@ -23,7 +23,7 @@ The included Terraform configuration files will create a Lambda function using a
 ## KMS
 Chef Server uses public key encryption to authenticate API requests.  This requires the client to hash the requests using a valid private key.  With this example, we'll use KMS to store an encrypted copy of our private key and then decrypt it on the fly with the Lambda function.
 
-1. Create a Key in KMS.
+1. [Create a Key in KMS](http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html).
 * Store the encrypted certificate in KMS using the AWS CLI tools:  `aws kms encrypt --key-id KEY_FROM_STEP_1 --plaintext file://your_private_key.pem`
 * You will receive a JSON response with a CiphertextBlob if successful.  Copy this CiphertextBlob into a new file called `encrypted_pem.txt` and store it in the same directory as the Lambda function (required so it can be packaged up with the function itself).
 * If you will use the supplied Terraform example in this repository you do not need to add a Key User yet.  If you are following this as a reference and already have an IAM role for your Lambda function you can add it now as a Key User.
@@ -55,8 +55,17 @@ Assuming the above Prerequisites section was followed, simply run `terraform app
 
 After running Terraform, you will need to manually add the IAM Role created as a Key User for the KMS Key you created earlier.  You can do this by using the console and adding the role name that was printed to the screen as output from Terraform ("chef_node_cleanup_lambda", by default).
 
+## If you don't want to use Terraform
+If you'd prefer to not use Terraform, you should still follow the Prerequisites section to get setup.  Then you'll need to do the following manually:
+1. Create an IAM Role and Policy for the Lambda function.  Optionally use the builtin "lambda_basic_execution" IAM role.
+* Upload the Lambda function.
+* Setup a CloudWatch Event to invoke the Lambda function.
+
+# I Just Want The Lambda Function!
+The Lambda function code can be found at `lambda/main.py` for your reference.  Everything within the `lambda/` directory of this repository makes up the required files needed to run the Lambda as is so be sure to zip it all up.  You'll still want to consult the Prerequisites section to understand a few things, though.
+
 # Destroying
-To cleanup:
+If you used Terraform, you can cleanup with:
 1. `terraform destroy terraform`
 
 # License
