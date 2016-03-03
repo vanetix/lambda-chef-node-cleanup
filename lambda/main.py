@@ -15,6 +15,8 @@ v1.0.0
 """
 from __future__ import print_function
 import logging
+# only needed to using self signed certificate as noted below on line 30
+# import os
 from base64 import b64decode
 from botocore.exceptions import ClientError
 import boto3
