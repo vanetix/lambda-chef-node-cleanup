@@ -15,7 +15,6 @@ v1.0.0
 """
 from __future__ import print_function
 import logging
-import os
 from base64 import b64decode
 from botocore.exceptions import ClientError
 import boto3
@@ -24,10 +23,11 @@ from chef.exceptions import ChefServerNotFoundError
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
-CHEF_SERVER_URL = 'https://ec2-52-35-252-248.us-west-2.compute.amazonaws.com/organizations/aws'
-USERNAME = 'joshcb'
-# Needed if using self signed certs
-os.environ["SSL_CERT_FILE"] = "ec2-52-35-252-248.us-west-2.compute.amazonaws.com.crt"
+CHEF_SERVER_URL = 'https://your.domain/organizations/your_organization'
+USERNAME = 'CHEF_USER'
+# Needed if using self signed certs such as when using a test Chef Server.
+# Include the certificate in the Lambda package at the location specified.
+# os.environ["SSL_CERT_FILE"] = "ec2-XXX-XXX-XXX-XXX.us-west-2.compute.amazonaws.com.crt"
 
 def log_event(event):
     """Logs event information for debugging"""
