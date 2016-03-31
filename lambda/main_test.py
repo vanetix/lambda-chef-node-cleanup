@@ -11,13 +11,11 @@
 """
 Unit Tests for chef_node_cleanup Lambda function
 """
-import pytest
 from botocore.exceptions import ClientError
 from mock import MagicMock, patch
 from main import log_event
 from main import get_instance_id
 from main import get_pem
-from main import handle
 
 def test_log_event():
     """
@@ -29,7 +27,7 @@ def test_get_instance_id():
     """
     Test the get_instance_id function with valid event
     """
-    event = { 'detail': { 'instance-id': 'i-abcde123' } }
+    event = {'detail': {'instance-id': 'i-abcde123'}}
     assert get_instance_id(event) == 'i-abcde123'
 
 def test_get_instance_id_with_invalid_event():
@@ -37,16 +35,22 @@ def test_get_instance_id_with_invalid_event():
     Test the get_instance_id function with invalid event
     """
     event = {}
-    assert get_instance_id(event) == False
+    assert get_instance_id(event) is False
 
+@patch('__builtin__.open')
 @patch('boto3.client')
-def test_get_pem(mock_client):
+def test_get_pem(mock_client, mock_open):
     """
     Test the get_pem function with valid data
     """
     kms = MagicMock()
     mock_client.return_value = kms
-    decrypted_blob = { 'Plaintext': 'super_secret_key' }
+
+    mock_open.return_value.__enter__ = lambda s: s
+    mock_open.return_value.__exit__ = MagicMock()
+    mock_open.return_value.read.return_value = 'blah'
+
+    decrypted_blob = {'Plaintext': 'super_secret_key'}
     kms.decrypt.return_value = decrypted_blob
     assert get_pem() == 'super_secret_key'
 
@@ -64,21 +68,4 @@ def test_get_pem_with_boto_failure(mock_client):
         }
     }
     kms.decrypt.side_effect = ClientError(err_msg, 'Test')
-    assert get_pem() == False
-
-@patch('chef.ChefAPI')
-@patch('chef.Search')
-@patch('chef.Node')
-def test_handle(mock_chef_api, mock_chef_search, mock_chef_node):
-    """
-    Test the handle function with valid data
-    """
-    event = { 'detail': { 'instance-id': 'i-abcde123' } }
-    dummy_node = MagicMock()
-    mock_chef_api.return_value = True
-    mock_chef_search.return_value = ['node']
-    mock_chef_node.return_value = dummy_node
-    dummy_node.delete().return_value = True
-    # TODO
-    # Currently segfaulting need to investigate
-    # assert handle(event, 'Test') == True
+    assert get_pem() is False
