@@ -57,7 +57,7 @@ node.delete()
 If you prefer to not explicitly name your nodes and you do not want to include an attribute, another option is to let Chef use the fully qualified domain name (FQDN) of the instance as the node name (I believe this is the default behavior if you don't assign a name to a node during bootstrapping).  You can then query AWS Config in the Lambda function to retrieve the PrivateDNSName attribute and reconstruct the FQDN as it is a known pattern (ip-172-31-23-14.us-west-2.compute.internal).  Like above, you can then simply change the Lambda function to query for the node directly.
 
 # Using This Example
-Assuming the above Prerequisites section was followed, simply run `terraform apply terraform` from the parent directory.  This will create all the infrastructure resources required and deploy the Lambda function.
+Assuming the above Prerequisites section was followed, simply run `terraform apply terraform` from the parent directory.  This will create all the infrastructure resources required and deploy the Lambda function in the us-west-2 region.  To change the region, modify the `region` variable in `lambda/variables.tf`.
 
 After running Terraform, you will need to manually add the IAM Role created as a Key User for the KMS Key you created earlier.  You can do this by using the console and adding the role name that was printed to the screen as output from Terraform ("chef_node_cleanup_lambda", by default).
 
