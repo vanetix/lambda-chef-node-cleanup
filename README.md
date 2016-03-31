@@ -17,7 +17,7 @@ An open Pull Request will solve this better for the official project:  https://g
 ## Terraform
 If you'd like to quickly deploy the reference, install [Terraform](https://www.terraform.io) which will help setup required components.  If you already have the [AWS CLI tools](https://aws.amazon.com/cli/) installed, with a credential profile setup, no further action is required.
 
-If you do not have the AWS CLI tools installed, or any other AWS SDK, you should consider adding a [credential profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files).  Otherwise, Terraform will prompt you to enter the Access Key and Secret Key for a user with permissions able to provision resources (IAM Role, Lambda, and CloudWatch Event).
+If you do not have the AWS CLI tools installed, or any other AWS SDK, you should consider creating a [credential profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files) file.  Otherwise, Terraform will prompt you to enter the Access Key and Secret Key for a user with permissions able to provision resources (IAM Role, Lambda, and CloudWatch Event).
 ## Deploying the Lambda Function
 The included Terraform configuration files will create a Lambda function using a zip file named `lambda_function_payload.zip` in the parent directory (already present in this repository).  The uncompressed function and required dependencies can be found in the `lambda` directory.  Updating the zip and running `terraform apply terraform` from the parent directory will create a new version of the Lambda.
 ## KMS
@@ -25,7 +25,13 @@ Chef Server uses public key encryption to authenticate API requests.  This requi
 
 1. [Create a Key in KMS](http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html).
 * Store the encrypted certificate in KMS using the AWS CLI tools:  `aws kms encrypt --key-id KEY_FROM_STEP_1 --plaintext file://your_private_key.pem`
-* You will receive a JSON response with a CiphertextBlob if successful.  Copy this CiphertextBlob into a new file called `encrypted_pem.txt` and store it in the same directory as the Lambda function (required so it can be packaged up with the function itself).
+*	You will receive a response with a CiphertextBlob if successful.  An example of a successful response will look like:
+```
+{
+    "KeyId": "arn:aws:kms:us-east-1:123456789000:key/14d2aba8-5142-4612-a836-7cf17284c8fd",
+    "CiphertextBlob": "CiCgJ6/K9CIXrDdsJ1fES7kBIJ0STEn+VwpMBjzsHVnH2xKQAQEBAgB4oCevyvQiF6w3bCdXxEu5ASCdEkxJ/lcKTAY87B1Zx9sAAABnMGUGCSqGSIb3DQEHBqBYMFYCAQAwUQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAyk4nsWzRAWTiU4syoCARCAJDHOtYNdSYI6wlso8SgATXKJ0WF5s3qhLcVqMKxaTOO3bCI6Lw=="
+}
+```
 * If you will use the supplied Terraform example in this repository you do not need to add a Key User yet.  If you are following this as a reference and already have an IAM role for your Lambda function you can add it now as a Key User.
 
 ## Lambda Function
