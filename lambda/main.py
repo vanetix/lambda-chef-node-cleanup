@@ -49,7 +49,7 @@ def get_pem():
     """Decrypt the Ciphertext Blob to get USERNAME's pem file"""
     try:
         with open('encrypted_pem.txt', 'r') as encrypted_pem:
-            pem_file=encrypted_pem.read()
+            pem_file = encrypted_pem.read()
         kms = boto3.client('kms')
         return kms.decrypt(CiphertextBlob=b64decode(pem_file))['Plaintext']
     except (IOError, ClientError, KeyError) as err:
