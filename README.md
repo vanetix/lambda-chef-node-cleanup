@@ -1,17 +1,15 @@
 # Automatically Delete Terminated Instances in Chef Server with AWS Lambda
-Using CloudWatch Events, when an instance is terminated a Lambda function is triggered that will remove the node from Chef server for you.  For this example, we'll use Lambda, CloudWatch Events, and AWS KMS.
+Using CloudWatch Events, when an instance is terminated a Lambda function is triggered that will remove the node from Chef server for you.  For this we'll use Lambda, CloudWatch Events, and AWS KMS.
 
-**WARNING:  This code is meant as reference material only.  AWS does not endorse, recommend, or support putting this reference into production.**
-
-**WARNING:  Using this code may cost you money.  Please be sure you understand your current usage and the costs associated with this reference code before launching in your AWS account.**
+**WARNING:  This code is meant as reference material only.  Using this code may cost you money.  Please be sure you understand your current usage and the costs associated with this reference code before launching in your AWS account.**
 
 ## Details
 When an instance terminates, CloudWatch events will pass a JSON object containing the Instance ID to a Lambda function.  The JSON object does not contain any other identifying information of the instance, such as DNS name or Public IP Address.  Additionally, since the instance is now in a terminated state we cannot query any other identifying information about the instance.  This is important to understand because it effects how we must query for the node in Chef Server in order to delete it automatically.
 
 The Lambda function then communicates with the Chef Server using a request hashed with a valid private key of a valid Chef Server user with appropriate permissions.  The Lambda expects an AWS KMS encrypted version of the private key which it will decrypt on the fly to sign all requests to the Chef Server.  The Lambda then makes a request to find a matching node in the Chef Server and finally a request to delete that node.
 
-## WARNING:  Forked version of PyChef in use
-Currently, the version of [PyChef](https://github.com/coderanger/pychef) found in pip is 0.2.3 and does not support Amazon Linux which is the underlying OS that Lambda runs on.  The version of PyChef included in this repository is a [fork](https://github.com/irlrobot/pychef) modified to provide Amazon Linux support.
+## Forked version of PyChef in use
+[PyChef](https://github.com/coderanger/pychef) is used in this code to help make API calls to Chef Server.  Currently, the version of PyChef found in pip is 0.2.3 and does not support Amazon Linux which is the underlying OS that Lambda runs on.  The version of PyChef included in this repository is a [fork](https://github.com/irlrobot/pychef) modified to provide Amazon Linux support.
 
 An open Pull Request will solve this better for the official project:  https://github.com/coderanger/pychef/pull/49.  You are encouraged to create your own client for use in production until the official project provides support.
 
