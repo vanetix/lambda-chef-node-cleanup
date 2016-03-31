@@ -8,3 +8,5 @@ terraform.tfstate.backup
 project.json
 **.crt
 **.DS_STORE
+lambda_function_payload.zip
+lambda/encrypted_pem.txt

@@ -15,7 +15,9 @@ An open Pull Request will solve this better for the official project:  https://g
 
 # Prerequisites
 ## Terraform
-Install [Terraform](https://www.terraform.io)
+If you'd like to quickly deploy the reference, install [Terraform](https://www.terraform.io) which will help setup required components.  If you already have the [AWS CLI tools](https://aws.amazon.com/cli/) installed, with a credential profile setup, no further action is required.
+
+If you do not have the AWS CLI tools installed, or any other AWS SDK, you should consider creating a [credential profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files) file.  Otherwise, Terraform will prompt you to enter the Access Key and Secret Key for a user with permissions able to provision resources (IAM Role, Lambda, and CloudWatch Event).
 ## Deploying the Lambda Function
 The included Terraform configuration files will create a Lambda function using a zip file named `lambda_function_payload.zip` in the parent directory (already present in this repository).  The uncompressed function and required dependencies can be found in the `lambda` directory.  Updating the zip and running `terraform apply terraform` from the parent directory will create a new version of the Lambda.
 ## KMS
@@ -23,7 +25,13 @@ Chef Server uses public key encryption to authenticate API requests.  This requi
 
 1. [Create a Key in KMS](http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html).
 * Store the encrypted certificate in KMS using the AWS CLI tools:  `aws kms encrypt --key-id KEY_FROM_STEP_1 --plaintext file://your_private_key.pem`
-* You will receive a JSON response with a CiphertextBlob if successful.  Copy this CiphertextBlob into a new file called `encrypted_pem.txt` and store it in the same directory as the Lambda function (required so it can be packaged up with the function itself).
+*	You will receive a response with a CiphertextBlob if successful.  An example of a successful response will look like:
+```
+{
+    "KeyId": "arn:aws:kms:us-east-1:123456789000:key/14d2aba8-5142-4612-a836-7cf17284c8fd",
+    "CiphertextBlob": "CiCgJ6/K9CIXrDdsJ1fES7kBIJ0STEn+VwpMBjzsHVnH2xKQAQEBAgB4oCevyvQiF6w3bCdXxEu5ASCdEkxJ/lcKTAY87B1Zx9sAAABnMGUGCSqGSIb3DQEHBqBYMFYCAQAwUQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAyk4nsWzRAWTiU4syoCARCAJDHOtYNdSYI6wlso8SgATXKJ0WF5s3qhLcVqMKxaTOO3bCI6Lw=="
+}
+```
 * If you will use the supplied Terraform example in this repository you do not need to add a Key User yet.  If you are following this as a reference and already have an IAM role for your Lambda function you can add it now as a Key User.
 
 ## Lambda Function
@@ -49,7 +57,9 @@ node.delete()
 If you prefer to not explicitly name your nodes and you do not want to include an attribute, another option is to let Chef use the fully qualified domain name (FQDN) of the instance as the node name (I believe this is the default behavior if you don't assign a name to a node during bootstrapping).  You can then query AWS Config in the Lambda function to retrieve the PrivateDNSName attribute and reconstruct the FQDN as it is a known pattern (ip-172-31-23-14.us-west-2.compute.internal).  Like above, you can then simply change the Lambda function to query for the node directly.
 
 # Using This Example
-Assuming the above Prerequisites section was followed, simply run `terraform apply terraform` from the parent directory.  This will create all the infrastructure resources required and deploy the Lambda function.
+Assuming the above Prerequisites section was followed and you've modified the Lambda function to include your Chef Server information, the next step is to build the payload.  From the parent directory you can run `zip -r lambda_function_payload.zip lambda/*` which creates a zip file containing everything AWS Lambda needs to run the code.  The name `lambda_function_payload.zip` is what the Terraform configuration expects the file to be named, so if you change it be sure to update `terraform/main.tf` as well.
+
+Then, simply run `terraform apply terraform` from the parent directory.  This will create all the infrastructure resources required and deploy the Lambda function in the us-west-2 region.  To change the region, modify the `region` variable in `lambda/variables.tf`.
 
 After running Terraform, you will need to manually add the IAM Role created as a Key User for the KMS Key you created earlier.  You can do this by using the console and adding the role name that was printed to the screen as output from Terraform ("chef_node_cleanup_lambda", by default).
 
@@ -63,8 +73,7 @@ If you'd prefer to not use Terraform, you should still follow the Prerequisites 
 The Lambda function code can be found at `lambda/main.py` for your reference.  Everything within the `lambda/` directory of this repository makes up the required files needed to run the Lambda as is so be sure to zip it all up.  You'll still want to consult the Prerequisites section to understand a few things, though.
 
 # Destroying
-If you used Terraform, you can cleanup with:
-1. `terraform destroy terraform`
+If you used Terraform, you can cleanup with `terraform destroy terraform`
 
 # License
 Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
