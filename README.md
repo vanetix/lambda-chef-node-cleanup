@@ -15,7 +15,9 @@ An open Pull Request will solve this better for the official project:  https://g
 
 # Prerequisites
 ## Terraform
-Install [Terraform](https://www.terraform.io)
+If you'd like to quickly deploy the reference, install [Terraform](https://www.terraform.io) which will help setup required components.  If you already have the [AWS CLI tools](https://aws.amazon.com/cli/) installed, with a credential profile setup, no further action is required.
+
+If you do not have the AWS CLI tools installed, or any other AWS SDK, you should consider adding a [credential profile](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-config-files).  Otherwise, Terraform will prompt you to enter the Access Key and Secret Key for a user with permissions able to provision resources (IAM Role, Lambda, and CloudWatch Event).
 ## Deploying the Lambda Function
 The included Terraform configuration files will create a Lambda function using a zip file named `lambda_function_payload.zip` in the parent directory (already present in this repository).  The uncompressed function and required dependencies can be found in the `lambda` directory.  Updating the zip and running `terraform apply terraform` from the parent directory will create a new version of the Lambda.
 ## KMS
@@ -63,8 +65,7 @@ If you'd prefer to not use Terraform, you should still follow the Prerequisites 
 The Lambda function code can be found at `lambda/main.py` for your reference.  Everything within the `lambda/` directory of this repository makes up the required files needed to run the Lambda as is so be sure to zip it all up.  You'll still want to consult the Prerequisites section to understand a few things, though.
 
 # Destroying
-If you used Terraform, you can cleanup with:
-1. `terraform destroy terraform`
+If you used Terraform, you can cleanup with `terraform destroy terraform`
 
 # License
 Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
