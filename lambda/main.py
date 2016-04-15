@@ -11,7 +11,7 @@
 """
 Remove a node from Chef server when a termination event is received
 joshcb@amazon.com
-v1.0.0
+v1.1.0
 """
 from __future__ import print_function
 import logging
