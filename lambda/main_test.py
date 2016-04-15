@@ -18,6 +18,7 @@ from main import get_instance_id
 from main import get_pem
 from main import handle
 from aws_lambda_sample_events import SampleEvent
+from chef.exceptions import ChefServerNotFoundError
 
 def test_log_event():
     """
@@ -87,17 +88,12 @@ def test_handle(mock_chefapi, mock_search, mock_node, mock_client):
     mock_client.delete.return_value = True
     assert handle(cloudwatch.event, 'blah') is True
 
-@patch('chef.Client')
-@patch('chef.Node')
 @patch('chef.Search')
 @patch('chef.ChefAPI')
-def test_handle_with_chefservernotfounderror_on_search(mock_chefapi, mock_search, mock_node, mock_client):
+def test_handle_with_chefservernotfounderror_on_search(mock_chefapi, mock_search):
     """
     Tests the handle function with ChefServerNotFoundError on search
     """
     cloudwatch = SampleEvent('cloudwatch_events')
-    node = MagicMock()
-    mock_search.return_value = node
-    mock_node.delete.return_value = True
-    mock_client.delete.return_value = True
-    assert handle(cloudwatch.event, 'blah') is True
+    mock_search.side_effect = ChefServerNotFoundError('boom')
+    assert handle(cloudwatch.event, 'blah') is False
