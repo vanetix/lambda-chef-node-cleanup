@@ -20,7 +20,7 @@ import logging
 from base64 import b64decode
 from botocore.exceptions import ClientError
 import boto3
-from chef import ChefAPI, Node, Search, Client
+import chef
 from chef.exceptions import ChefServerNotFoundError
 
 LOGGER = logging.getLogger()
@@ -60,18 +60,18 @@ def handle(event, _context):
     """Lambda Handler"""
     log_event(event)
 
-    with ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME):
+    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME):
         instance_id = get_instance_id(event)
         try:
-            search = Search('node', 'ec2_instance_id:' + instance_id)
+            search = chef.Search('node', 'ec2_instance_id:' + instance_id)
         except ChefServerNotFoundError as err:
             LOGGER.error(err)
             return False
 
         if len(search) != 0:
             for instance in search:
-                node = Node(instance.object.name)
-                client = Client(instance.object.name)
+                node = chef.Node(instance.object.name)
+                client = chef.Client(instance.object.name)
                 try:
                     node.delete()
                     LOGGER.info('===Node Delete: SUCCESS===')
