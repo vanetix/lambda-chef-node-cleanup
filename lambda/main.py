@@ -11,12 +11,10 @@
 """
 Remove a node from Chef server when a termination event is received
 joshcb@amazon.com
-v1.1.0
+v1.2.0
 """
 from __future__ import print_function
 import logging
-# only needed to using self signed certificate as noted below on line 30
-# import os
 from base64 import b64decode
 from botocore.exceptions import ClientError
 import boto3
@@ -25,11 +23,9 @@ from chef.exceptions import ChefServerNotFoundError
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
+REGION= 'us-west-2' # Change to region your AWS Lambda function is in
 CHEF_SERVER_URL = 'https://your.domain/organizations/your_organization'
 USERNAME = 'CHEF_USER'
-# Needed if using self signed certs such as when using a test Chef Server.
-# Include the certificate in the Lambda package at the location specified.
-# os.environ["SSL_CERT_FILE"] = "ec2-XXX-XXX-XXX-XXX.us-west-2.compute.amazonaws.com.crt"
 
 def log_event(event):
     """Logs event information for debugging"""
@@ -50,7 +46,8 @@ def get_pem():
     try:
         with open('encrypted_pem.txt', 'r') as encrypted_pem:
             pem_file = encrypted_pem.read()
-        kms = boto3.client('kms')
+
+        kms = boto3.client('kms', region_name=REGION)
         return kms.decrypt(CiphertextBlob=b64decode(pem_file))['Plaintext']
     except (IOError, ClientError, KeyError) as err:
         LOGGER.error(err)
@@ -60,7 +57,9 @@ def handle(event, _context):
     """Lambda Handler"""
     log_event(event)
 
-    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME):
+    # If you're using a self signed certificate change
+    # the ssl_verify argument to False
+    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME, ssl_verify=False):
         instance_id = get_instance_id(event)
         try:
             search = chef.Search('node', 'ec2_instance_id:' + instance_id)
