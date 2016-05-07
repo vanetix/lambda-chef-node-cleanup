@@ -31,7 +31,7 @@ Chef Server uses public key encryption to authenticate API requests.  This requi
 * Copy this CiphertextBlob into a new file and store it in the same directory as the Lambda function; this is required so it can be packaged up with the function itself. I’ve used encrypted_pem.txt as the file name in my example, given the encrypted object is a certificate and private key, which is commonly name with the .pem file extension. Note the CiphertextBlob output is base64 encoded by the AWS CLI unless you send the output to a binary file using the fileb:// parameter. See the AWS KMS CLI help for more information on input and output encoding.
 
 ## Lambda Function
-Modify the `CHEF_SERVER_URL` and `USERNAME` variables as appropriate in `lambda/functions/node_cleanup/main.py`.
+Modify the `REGION`, `CHEF_SERVER_URL`, and `USERNAME` variables as appropriate in `lambda/main.py`.
 
 ## Chef Server Permissions
 The user making the request needs the appropriate permissions in Chef Server to query and delete nodes.  As described above, you'll need access to the private key for this user.
