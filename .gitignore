@@ -11,3 +11,4 @@ project.json
 lambda_function_payload.zip
 lambda/encrypted_pem.txt
 venv/
+.chef/
