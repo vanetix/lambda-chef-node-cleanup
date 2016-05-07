@@ -8,11 +8,6 @@ When an instance terminates, CloudWatch events will pass a JSON object containin
 
 The Lambda function then communicates with the Chef Server using a request hashed with a valid private key of a valid Chef Server user with appropriate permissions.  The Lambda expects an AWS KMS encrypted version of the private key which it will decrypt on the fly to sign all requests to the Chef Server.  The Lambda then makes a request to find a matching node in the Chef Server and finally a request to delete that node.
 
-## Forked version of PyChef in use
-[PyChef](https://github.com/coderanger/pychef) is used in this code to help make API calls to Chef Server.  Currently, the version of PyChef found in pip is 0.2.3 and does not support Amazon Linux which is the underlying OS that Lambda runs on.  The version of PyChef included in this repository is a [fork](https://github.com/irlrobot/pychef) modified to provide Amazon Linux support.
-
-An open Pull Request will solve this better for the official project:  https://github.com/coderanger/pychef/pull/49.  You are encouraged to create your own client for use in production until the official project provides support.
-
 # Prerequisites
 ## Terraform
 If you'd like to quickly deploy the reference, install [Terraform](https://www.terraform.io) which will help setup required components.  If you already have the [AWS CLI tools](https://aws.amazon.com/cli/) installed, with a credential profile setup, no further action is required.
@@ -23,19 +18,21 @@ The included Terraform configuration files will create a Lambda function using a
 ## KMS
 Chef Server uses public key encryption to authenticate API requests.  This requires the client to hash the requests using a valid private key.  With this example, we'll use KMS to store an encrypted copy of our private key and then decrypt it on the fly with the Lambda function.
 
-1. [Create a Key in KMS](http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html).
-* Store the encrypted certificate in KMS using the AWS CLI tools:  `aws kms encrypt --key-id KEY_FROM_STEP_1 --plaintext file://your_private_key.pem`
-*	You will receive a response with a CiphertextBlob if successful.  An example of a successful response will look like:
-```
-{
-    "KeyId": "arn:aws:kms:us-east-1:123456789000:key/14d2aba8-5142-4612-a836-7cf17284c8fd",
-    "CiphertextBlob": "CiCgJ6/K9CIXrDdsJ1fES7kBIJ0STEn+VwpMBjzsHVnH2xKQAQEBAgB4oCevyvQiF6w3bCdXxEu5ASCdEkxJ/lcKTAY87B1Zx9sAAABnMGUGCSqGSIb3DQEHBqBYMFYCAQAwUQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAyk4nsWzRAWTiU4syoCARCAJDHOtYNdSYI6wlso8SgATXKJ0WF5s3qhLcVqMKxaTOO3bCI6Lw=="
-}
-```
-* If you will use the supplied Terraform example in this repository you do not need to add a Key User yet.  If you are following this as a reference and already have an IAM role for your Lambda function you can add it now as a Key User.
+1. [Create a customer master key (CMK) in KMS](http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html) and note the keyId that is automatically generated.
+  * If you will use the supplied Terraform example in this repository you do not need to add a Key User yet.  If you are following this as a reference and already have an IAM role for your Lambda function you can add it now as a Key User.  Your IAM user needs kms.encrypt permissions to encrypt the certificate, while your Lambda user (via an IAM role) needs kms.decrypt permissions at runtime to access the certificate.
+2. Encrypt the certificate in KMS using the AWS CLI tools:  `aws kms encrypt --key-id KEY_FROM_STEP_1 --plaintext file://your_private_key.pem`
+3.	You will receive a response with a CiphertextBlob if successful.  An example of a successful response will look like:
+  ```
+  {
+      "KeyId": "arn:aws:kms:us-east-1:123456789000:key/14d2aba8-5142-4612-a836-7cf17284c8fd",
+      "CiphertextBlob": "CiCgJ6/K9CIXrDdsJ1fES7kBIJ0STEn+VwpMBjzsHVnH2xKQAQEBAgB4oCevyvQiF6w3bCdXxEu5ASCdEkxJ/lcKTAY87B1Zx9sAAABnMGUGCSqGSIb3DQEHBqBYMFYCAQAwUQYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAyk4nsWzRAWTiU4syoCARCAJDHOtYNdSYI6wlso8SgATXKJ0WF5s3qhLcVqMKxaTOO3bCI6Lw=="
+  }
+  ```
+
+4. Copy this CiphertextBlob into a new file and store it in the same directory as the Lambda function; this is required so it can be packaged up with the function itself. I’ve used encrypted_pem.txt as the file name in my example, given the encrypted object is a certificate and private key, which is commonly name with the .pem file extension. Note the CiphertextBlob output is base64 encoded by the AWS CLI unless you send the output to a binary file using the fileb:// parameter. See the AWS KMS CLI help for more information on input and output encoding.
 
 ## Lambda Function
-Modify the `CHEF_SERVER_URL` and `USERNAME` variables as appropriate in `lambda/functions/node_cleanup/main.py`.
+Modify the `REGION`, `CHEF_SERVER_URL`, and `USERNAME` variables as appropriate in `lambda/main.py`.
 
 ## Chef Server Permissions
 The user making the request needs the appropriate permissions in Chef Server to query and delete nodes.  As described above, you'll need access to the private key for this user.
@@ -65,6 +62,7 @@ After running Terraform, you will need to manually add the IAM Role created as a
 
 ## If you don't want to use Terraform
 If you'd prefer to not use Terraform, you should still follow the Prerequisites section to get setup.  Then you'll need to do the following manually:
+
 1. Create an IAM Role and Policy for the Lambda function.  Optionally use the builtin "lambda_basic_execution" IAM role.
 * Upload the Lambda function.
 * Setup a CloudWatch Event to invoke the Lambda function.

@@ -1,6 +1,7 @@
 # Exception hierarchy for chef
 # Copyright (c) 2010 Noah Kantrowitz <noah@coderanger.net>
 
+
 class ChefError(Exception):
     """Top-level Chef error."""
 
@@ -11,7 +12,7 @@ class ChefServerError(ChefError):
     def __init__(self, message, code=None):
         self.raw_message = message
         if isinstance(message, list):
-            message = u', '.join(m for m in message if m)
+            message = ', '.join(m for m in message if m)
         super(ChefError, self).__init__(message)
         self.code = code
 
@@ -29,3 +30,8 @@ class ChefServerNotFoundError(ChefServerError):
 
 class ChefAPIVersionError(ChefError):
     """An incompatible API version error"""
+
+
+class ChefObjectTypeError(ChefError):
+    """An invalid object type error"""
+
