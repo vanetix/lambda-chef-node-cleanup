@@ -59,7 +59,7 @@ def handle(event, _context):
 
     # If you're using a self signed certificate change
     # the ssl_verify argument to False
-    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME, ssl_verify=False):
+    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME, ssl_verify=True):
         instance_id = get_instance_id(event)
         try:
             search = chef.Search('node', 'ec2_instance_id:' + instance_id)
