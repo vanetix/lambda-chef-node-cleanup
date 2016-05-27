@@ -21,11 +21,14 @@ import boto3
 import chef
 from chef.exceptions import ChefServerNotFoundError
 
+import local_config
+
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
-REGION= 'us-west-2' # Change to region your AWS Lambda function is in
-CHEF_SERVER_URL = 'https://your.domain/organizations/your_organization'
-USERNAME = 'CHEF_USER'
+REGION= local_config.REGION
+CHEF_SERVER_URL = local_config.CHEF_SERVER_URL
+USERNAME = local_config.USERNAME
+VERIFY_SSL = local_config.VERIFY_SSL
 
 def log_event(event):
     """Logs event information for debugging"""
@@ -59,7 +62,7 @@ def handle(event, _context):
 
     # If you're using a self signed certificate change
     # the ssl_verify argument to False
-    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME, ssl_verify=True):
+    with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME, ssl_verify=VERIFY_SSL):
         instance_id = get_instance_id(event)
         try:
             search = chef.Search('node', 'ec2_instance_id:' + instance_id)
