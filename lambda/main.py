@@ -67,6 +67,11 @@ def handle(event, _context):
     # the ssl_verify argument to False
     with chef.ChefAPI(CHEF_SERVER_URL, get_pem(), USERNAME, ssl_verify=VERIFY_SSL):
         instance_id = get_instance_id(event)
+
+        if instance_id == False:
+            LOGGER.error('Unable to find instance id in event.')
+            return False
+
         try:
             search = chef.Search('node', 'ec2_instance_id:' + instance_id)
         except ChefServerNotFoundError as err:
