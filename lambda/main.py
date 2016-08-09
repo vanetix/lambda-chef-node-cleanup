@@ -39,7 +39,10 @@ def log_event(event):
 def get_instance_id(event):
     """Parses InstanceID from the event dict and gets the FQDN from EC2 API"""
     try:
-        return event['detail']['instance-id']
+        source = event['source']
+        key = 'instance-id' if source == 'aws.ec2' else 'EC2InstanceId'
+
+        return event['detail'][key]
     except KeyError as err:
         LOGGER.error(err)
         return False
