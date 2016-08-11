@@ -1,0 +1,25 @@
+#!/bin/bash
+
+IDS=`knife search node '*' -a ec2.instance_id 2> /dev/null | grep 'instance_id' | cut -d ':' -f2 | tr -d ' '`
+
+for id in $IDS; do
+  name=`knife search node "ec2_instance_id:$id" -i 2> /dev/null`
+
+  aws ec2 describe-instance-status --instance-id "$id" &> /dev/null
+
+  if [ $? -ne 0 ]; then
+    knife node delete $name -y &> /dev/null
+
+    if [ $? -eq 0 ]; then
+      echo "Deleted $name node."
+    fi
+
+    knife client delete $name -y &> /dev/null
+
+    if [ $? -eq 0 ]; then
+      echo "Deleted $name client."
+    fi
+  else
+    echo "Found $name, not removing."
+  fi
+done
