@@ -10,5 +10,7 @@ project.json
 **.DS_STORE
 lambda_function_payload.zip
 lambda/encrypted_pem.txt
+lambda/local_config.py
+*.zip
 venv/
 .chef/
