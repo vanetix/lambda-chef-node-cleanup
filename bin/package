@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cwd=`pwd`
+archive="$cwd/lambda_chef_node_cleanup.zip"
+
+if [ -f "$archive" ]; then
+  rm -f $archive
+fi
+
+cd lambda && zip -r $archive ./*
+cd $cwd

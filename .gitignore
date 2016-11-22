@@ -8,7 +8,7 @@ terraform.tfstate.backup
 project.json
 **.crt
 **.DS_STORE
-lambda_function_payload.zip
+lambda_chef_node_cleanup.zip
 lambda/encrypted_pem.txt
 lambda/local_config.py
 *.zip
